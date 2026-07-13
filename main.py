@@ -1,5 +1,4 @@
 import streamlit as st
- 
 import pandas as pd
 
 # 페이지 기본 설정
