@@ -6,64 +6,76 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .container { max-width: 900px; margin: auto; }
-        select { margin-bottom: 20px; padding: 10px; }
+        body { font-family: 'Pretendard', sans-serif; padding: 40px; background-color: #f4f7f6; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        .controls { margin-bottom: 30px; }
+        select { padding: 10px 20px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>연도별 월별 전력 수급 현황</h1>
-        <label for="yearSelect">연도 선택: </label>
-        <select id="yearSelect"></select>
+        <div class="controls">
+            <label for="yearSelect">연도 선택: </label>
+            <select id="yearSelect"></select>
+        </div>
         <canvas id="powerChart"></canvas>
     </div>
 
     <script>
+        let myChart;
         const ctx = document.getElementById('powerChart').getContext('2d');
-        let powerChart;
-        let csvData = [];
+        const select = document.getElementById('yearSelect');
 
-        // CSV 파일 로드
+        // CSV 파일 읽기
         Papa.parse('HOME_전력수급_최대_최소전력월별평균.csv', {
             download: true,
             header: true,
+            skipEmptyLines: true,
             complete: function(results) {
-                csvData = results.data;
-                initDropdown();
-                updateChart(csvData[0].연도);
+                const data = results.data;
+                
+                // 드롭다운 채우기
+                data.forEach((row, index) => {
+                    if (row.연도) {
+                        const option = document.createElement('option');
+                        option.value = index; // 인덱스를 값으로 저장
+                        option.text = row.연도;
+                        select.appendChild(option);
+                    }
+                });
+
+                // 초기 차트 생성 (첫 번째 데이터)
+                renderChart(data[0]);
+
+                // 선택 변경 시 이벤트
+                select.addEventListener('change', function() {
+                    renderChart(data[this.value]);
+                });
             }
         });
 
-        function initDropdown() {
-            const select = document.getElementById('yearSelect');
-            csvData.forEach(row => {
-                if (!row.연도) return;
-                const opt = document.createElement('option');
-                opt.value = row.연도;
-                opt.innerHTML = row.연도;
-                select.appendChild(opt);
-            });
-            select.onchange = (e) => updateChart(e.target.value);
-        }
+        function renderChart(row) {
+            const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+            const values = months.map(m => parseFloat(row[m]) || 0);
 
-        function updateChart(year) {
-            const row = csvData.find(r => r.연도 == year);
-            const labels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
-            const data = labels.map(m => parseFloat(row[m]) || 0);
+            if (myChart) myChart.destroy();
 
-            if (powerChart) powerChart.destroy();
-
-            powerChart = new Chart(ctx, {
-                type: 'line',
+            myChart = new Chart(ctx, {
+                type: 'bar', // 시각적으로 비교하기 좋게 막대 그래프로 변경했습니다.
                 data: {
-                    labels: labels,
+                    labels: months,
                     datasets: [{
-                        label: year + '년 전력 수급량',
-                        data: data,
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
+                        label: row.연도 + '년 전력 수급량',
+                        data: values,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
                     }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true } }
                 }
             });
         }
