@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>전력 수급 현황 시각화</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f7f6; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        select { padding: 10px; width: 100%; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>연도별 월별 전력 수급 현황</h1>
+        <select id="yearSelect"></select>
+        <canvas id="powerChart"></canvas>
+    </div>
+
+    <script>
+        // CSV 내용을 직접 코드로 삽입하여 보안 문제 해결
+        const powerData = [
+            {연도: "2026", "1월": 80230, "2월": 73911, "3월": 68515, "4월": 65977, "5월": 66070, "6월": 71508, "7월": 79496, "8월": 0, "9월": 0, "10월": 0, "11월": 0, "12월": 0},
+            {연도: "2025", "1월": 75680, "2월": 77517, "3월": 68985, "4월": 65207, "5월": 64992, "6월": 71643, "7월": 85033, "8월": 85492, "9월": 77581, "10월": 66272, "11월": 68249, "12월": 76285},
+            {연도: "2024", "1월": 79136, "2월": 73263, "3월": 70091, "4월": 64455, "5월": 64361, "6월": 70480, "7월": 80515, "8월": 87799, "9월": 78052, "10월": 66907, "11월": 67831, "12월": 75537},
+            {연도: "2023", "1월": 79463, "2월": 76183, "3월": 68151, "4월": 64932, "5월": 65016, "6월": 70645, "7월": 79213, "8월": 82736, "9월": 73483, "10월": 65754, "11월": 71252, "12월": 76530}
+        ];
+
+        const ctx = document.getElementById('powerChart').getContext('2d');
+        const select = document.getElementById('yearSelect');
+        let myChart;
+
+        // 드롭다운 초기화
+        powerData.forEach((item, index) => {
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.text = item.연도 + "년";
+            select.appendChild(opt);
+        });
+
+        function updateChart(index) {
+            const row = powerData[index];
+            const labels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+            const data = labels.map(m => row[m]);
+
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{ label: row.연도 + '년 전력량', data: data, backgroundColor: '#36a2eb' }]
+                }
+            });
+        }
+
+        select.addEventListener('change', (e) => updateChart(e.target.value));
+        updateChart(0); // 초기화
+    </script>
+</body>
+</html>
